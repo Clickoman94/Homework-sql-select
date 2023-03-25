@@ -1,14 +1,3 @@
-import sqlalchemy
-import psycopg2
-from pprint import pprint
-
-engine = sqlalchemy.create_engine('postgresql://postgres:user@localhost:5432/netology2021')
-pprint(engine)
-
-connection = engine.connect()
-print(connection)
-pprint(engine.table_names())
-
 #1.Название и год выхода альбомов, вышедших в 2018 году
 select_1 = connection.execute('''SELECT  name, releasedate FROM album
 WHERE releasedate BETWEEN '2018-01-01' AND '2018-12-31';
@@ -43,4 +32,3 @@ pprint(select_5)
 select_6 = connection.execute('''SELECT name FROM track
 WHERE name LIKE '%%my%%';
 ''').fetchall()
-pprint(select_6)
