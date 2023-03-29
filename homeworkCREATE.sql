@@ -1,44 +1,53 @@
-CREATE TABLE IF NOT EXISTS album_1 (
-	id serial PRIMARY KEY,
-	title varchar(60) NOT NULL,
-	release_year int);
-
-CREATE TABLE IF NOT EXISTS genre_1 (
-	id serial PRIMARY KEY,
-	name varchar(60) NOT NULL);
-
-CREATE TABLE IF NOT EXISTS artist_1 (
-	id serial PRIMARY KEY,
-	first_name varchar(40) NOT NULL,
-	second_name varchar(40) NOT NULL,
-	alias varchar(40));
-
-CREATE TABLE IF NOT EXISTS collection_1 (
-	id serial PRIMARY KEY,
-	title varchar(60) NOT NULL,
-	release_year int);
-
-CREATE TABLE IF NOT EXISTS track_1 (
-	id serial PRIMARY KEY,
-	name varchar(60) NOT NULL,
-	length integer NOT NULL,
-	album_id int REFERENCES album_1(id));
-
-
-CREATE TABLE IF NOT EXISTS collections_tracks (
-	track_id int NOT NULL REFERENCES track_1(id),
-	collection_id int NOT NULL REFERENCES collection_1(id),
-	CONSTRAINT pk_collections_tracks PRIMARY KEY (collection_id, track_id)
+create table if not exists Artists (
+	id_artist serial primary key,
+	artist_name VARCHAR (100) not null
 );
 
-CREATE TABLE IF NOT EXISTS albums_artists (
-	album_id int NOT NULL REFERENCES album_1(id),
-	artist_id int NOT NULL REFERENCES artist_1(id),
-	CONSTRAINT pk_albums_artists PRIMARY KEY (album_id, artist_id)
+
+create table if not exists Albums (
+	id_album integer primary key,
+	album_name varchar (100) not null,
+	album_release_year date not null
 );
 
-CREATE TABLE IF NOT EXISTS artists_genres (
-	genre_id int NOT NULL REFERENCES genre_1(id),
-	artist_id int NOT NULL REFERENCES artist_1(id),
-	CONSTRAINT pk_artists_genres PRIMARY KEY (artist_id, genre_id)
+
+create table if not exists Tracks (
+	id_track integer primary key,
+	track_name varchar (100) not null,
+	track_duration time not null,
+	id_album integer references Albums(id_album) not null
+);
+
+
+create table if not exists Genres (
+	id_genre serial primary key,
+	genre_name varchar (100) not null unique
+);
+
+
+create table if not exists Artists_Genres (
+	id_artist integer references Artists(id_artist) not null,
+	id_genre integer references Genres(id_genre) not null,
+	constraint pk primary key (id_artist, id_genre)
+);
+
+
+create table if not exists Artists_Album (
+	id_artist integer references Artists(id_artist) not null,
+	id_album integer references Albums(id_album) not null,
+	constraint pk_ primary key (id_artist, id_album)
+);
+
+
+create table if not exists Collections (
+	id_collection serial primary key,
+	collection_title varchar (100) not null,
+	collection_date date not null
+);
+
+
+create table if not exists Collection_Tracks (
+	id_collection integer references Collections(id_collection) not null,
+	id_track integer references Tracks(id_track) not null,
+	constraint pk__ primary key (id_collection, id_track)
 );
