@@ -1,72 +1,77 @@
---Количество исполнителей в каждом жанре
-select genre_name, count(id_artist_ag) from Genres
-join Artists_Genres on Genres.id_genre = Artists_Genres.id_genre_ag
-group by genre_name
+--1.количество исполнителей в каждом жанре;
 
---Количество треков, вошедших в альбомы 2019-2020 годов
-select count(album_name) from Tracks
-join albums on Tracks.id_album_t = Albums.id_album
-where album_release_year >= '20190101' and album_release_year <= '20201231'
-
---Средняя продолжительность треков по каждому альбому
-select album_name, avg(track_duration) from Tracks
-join Albums on Tracks.id_album_t = Albums.id_album
-group by album_name
-
---Все исполнители, которые не выпустили альбомы в 2020 году
-select artist_name from Artists
-join Artists_Album on Artists.id_artist = Artists_Album.id_artist_aa
-join Albums on Albums.id_album = Artists_Album.id_album_aa
-where album_release_year not between '20200101' and '20201231'
-group by artist_name
-
---Названия сборников, в которых присутствует конкретный исполнитель (выбрана Taylor Swift)
-select collection_title from Collections
-join Collection_Tracks on Collection_Tracks.id_collection_ct = Collections.id_collection
-join Tracks on Collection_Tracks.id_track_ct = Tracks.id_track
-join Albums on Tracks.id_album_t = Albums.id_album
-join Artists_Album on Artists_Album.id_album_aa = Albums.id_album
-join Artists on Artists_Album.id_artist_aa = Artists.id_artist
-where artist_name = 'Taylor Swift'
-group by collection_title
-
---Название альбомов, в которых присутствуют исполнители более 1 жанра
-select album_name, count(genre_name) from Albums
-join Artists_Album on Albums.id_album = Artists_Album.id_album_aa
-join Artists on Artists_Album.id_artist_aa = Artists.id_artist
-join Artists_Genres on Artists.id_artist = Artists_Genres.id_artist_ag
-join Genres on Genres.id_genre = Artists_Genres.id_genre_ag
-group by album_name
-having count(genre_name) > 1
-
---Наименование треков, которые не входят в сборники
-select track_name from Tracks
-left join Collection_Tracks on Tracks.id_track = Collection_Tracks.id_track_ct
-where id_collection_ct is null
-
---Исполнителя(-ей), написавшего самый короткий по продолжительности трек (теоретически таких треков может быть несколько)
-select artist_name, track_duration from Tracks
-join Albums on Tracks.id_album_t = Albums.id_album
-join Artists_Album on Artists_Album.id_album_aa = Albums.id_album
-join Artists on Artists_Album.id_artist_aa = Artists.id_artist
-where track_duration = (select min(track_duration) from tracks)
+select g.gengre_name, count(singer_id) from singersgenres sg
+left join genres g on g.genre_id = sg.genre_id
+group by g.gengre_name;
 
 
-select album_name, count(track_name) from Tracks
-join Albums on Tracks.id_album_t = Albums.id_album
-group by album_name
+--2.количество треков, вошедших в альбомы 2019-2020 годов;
+select count(*) Количество from songs s
+left join albums a on s.album = a.album_id
+where DATE_PART('year', a.album_year_of_issue::date) between 2019 and 2020;
 
---Название альбомов, содержащих наименьшее количество треков
-select distinct album_name from Albums
-left join Tracks on Tracks.id_album_t = Albums.id_album
-where Tracks.id_album_t in (
-    select id_album_t from Tracks
-    group by id_album_t
-    having count(id_album_t) = (
-         select count(id_track)
-         from Tracks
-         group by id_album_t
-         order by count
-         limit 1
-)
-)
+--3.средняя продолжительность треков по каждому альбому;
+
+select a.album_name , avg(s.song_duration) from songs s
+left join albums a on s.album = a.album_id
+group by a.album_name;
+
+--4.все исполнители, которые не выпустили альбомы в 2020 году;
+
+select s.singer_name from albums a
+left join singersalbums sa on sa.album_id = a.album_id
+left join singers s on s.singer_id = sa.singer_id
+where not DATE_PART('year', a.album_year_of_issue::date) = 2020
+group by s.singer_name;
+
+--5.названия сборников, в которых присутствует конкретный исполнитель (выберите сами);
+
+select distinct collection_name from collections c
+left join collectionssongs cs on cs.collection_id = c.collection_id
+left join songs s on cs.song_id = s.song_id
+left join albums a on s.album = a.album_id
+left join singersalbums sa on a.album_id = sa.album_id
+left join singers s2 on s2.singer_id = sa.singer_id
+where s2.singer_name like 'Kanye West';
+
+-- 6. название альбомов, в которых присутствуют исполнители более 1 жанра;
+
+select sg.singer_id, count(sg.genre_id) from albums a
+left join singersalbums sa on a.album_id = sa.album_id
+left join singers s on s.singer_id = sa.singer_id
+left join singersgenres sg on sg.singer_id = s.singer_id
+group by sg.singer_id;
+
+select a.album_name  from albums a
+left join singersalbums sa on sa.album_id = a.album_id
+left join singers s on s.singer_id = sa.singer_id
+left join singersgenres sg on sg.singer_id = s.singer_id
+left join genres g on g.genre_id = sg.genre_id
+group by a.album_name
+having count(distinct g.gengre_name) > 1;
+
+--7. наименование треков, которые не входят в сборники;
+select s.song_name, c.collection_id  from songs s
+left join collectionssongs c on c.song_id = s.song_id
+where c.collection_id is null;
+
+--8. исполнителя(-ей), написавшего самый короткий по продолжительности трек (теоретически таких треков может быть несколько);
+-- select min(song_duration) from songs s
+
+select s2.singer_name from songs s
+left join albums a on s.album = a.album_id
+left join singersalbums sa on a.album_id = sa.album_id
+left join singers s2 on s2.singer_id = sa.singer_id
+where s.song_duration = (select min(song_duration) from songs s
+);
+
+--9. название альбомов, содержащих наименьшее количество треков.
+select a.album_name, count(*) from albums a
+left join songs s on s.album = a.album_id
+group by a.album_name
+having count(*) =
+				(select count(*) from albums a
+				left join songs s on s.album = a.album_id
+				group by a.album_name
+				order by count(*)
+				limit 1);
