@@ -32,7 +32,7 @@ left join songs s on cs.song_id = s.song_id
 left join albums a on s.album = a.album_id
 left join singersalbums sa on a.album_id = sa.album_id
 left join singers s2 on s2.singer_id = sa.singer_id
-where s2.singer_name like 'Kanye West';
+where s2.singer_name like 'Taylor swift';
 
 -- 6. название альбомов, в которых присутствуют исполнители более 1 жанра;
 
